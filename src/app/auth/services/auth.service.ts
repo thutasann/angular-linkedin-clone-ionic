@@ -45,6 +45,15 @@ export class AuthService {
     )
   }
 
+  // to check user id
+  get userId(): Observable<number>{
+    return this.user$.asObservable().pipe(
+      switchMap((user: User) => {
+        return of(user.id);
+      })
+    )
+  };
+
   constructor(private http: HttpClient, private router:Router) { }
 
   // New User Register
