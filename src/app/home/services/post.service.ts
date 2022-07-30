@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/Post';
 
@@ -16,5 +17,10 @@ export class PostService {
 
   getSelectedPosts(params){
     return this.http.get<Post[]>(`${environment.baseApiUrl}/feed${params}`)
+    .pipe(
+      tap((posts: Post[]) => {
+        if (posts.length === 0) throw new Error('No posts to retrieve');
+      })
+    );
   }
 }

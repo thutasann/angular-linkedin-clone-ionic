@@ -35,7 +35,7 @@ export class AllPostsComponent implements OnInit {
       if(isInitialLoad) event.target.complete(); // if there is no post, hide the loader
       this.skipPosts = this.skipPosts + 5;
     }, (error) => {
-      console.error(error);
+      console.error("lol",error);
     })
   }
 

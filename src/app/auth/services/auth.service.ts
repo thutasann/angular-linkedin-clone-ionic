@@ -1,11 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, from, Observable, of } from 'rxjs';
+import { Storage } from '@capacitor/storage';
 // import { Plugins } from '@capacitor/core';
 // import { Storage } from '@capacitor/core/dist/'; // <--- Store in Local Storage
 import jwt_decode from 'jwt-decode'; // <--- JWT Decode
-import { switchMap, take, tap } from 'rxjs/operators'; // <--- take, tap
+import { map, switchMap, take, tap } from 'rxjs/operators'; // <--- take, tap
 import { environment } from 'src/environments/environment';
 import { NewUser } from '../models/newUser.model';
 import { Role, User } from '../models/user.model';
@@ -20,10 +21,8 @@ export class AuthService {
   private user$ = new BehaviorSubject<User>(null);
 
   private httpOptions: { headers: HttpHeaders } = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json'
-    }),
-  }
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+  };
 
   
 
@@ -61,21 +60,47 @@ export class AuthService {
       `${environment.baseApiUrl}/auth/login`, {email, password}, this.httpOptions
     ).pipe(take(1),
     tap((response: { token: string}) => {
-      // Plugins.Storage.set({
-      //   key: 'token',
-      //   value: response.token
-      // });
-      localStorage.setItem('token', response.token);
+      Storage.set({
+        key: 'token',
+        value: response.token
+      });
       const decodedToken: UserResponse = jwt_decode(response.token);
       this.user$.next(decodedToken.user);
     })); 
   };
 
+  // to check token in storage
+  isTokenInStorage(): Observable<boolean> {
+    return from(
+      Storage.get({
+        key: 'token',
+      })
+    ).pipe(
+      map((data: { value: string }) => {
+        if (!data || !data.value) return null;
+
+        const decodedToken: UserResponse = jwt_decode(data.value);
+        const jwtExpirationInMsSinceUnixEpoch = decodedToken.exp * 1000;
+        const isExpired =
+          new Date() > new Date(jwtExpirationInMsSinceUnixEpoch);
+
+        if (isExpired) return null;
+        if (decodedToken.user) {
+          this.user$.next(decodedToken.user);
+          return true;
+        }
+      })
+    );
+  }
+  
+
   // User logout
   logout(): void{
     this.user$.next(null);
     console.log(this.user$);
-    localStorage.removeItem('token');
+    Storage.remove({
+      key: 'token'
+    });
     this.router.navigateByUrl("/auth");
   }
 
