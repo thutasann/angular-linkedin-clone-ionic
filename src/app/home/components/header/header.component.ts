@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PopoverController } from '@ionic/angular';
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/auth/services/auth.service';
 import { PopoverComponent } from './popover/popover.component';
 
 @Component({
@@ -7,11 +9,19 @@ import { PopoverComponent } from './popover/popover.component';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(public popoverController: PopoverController) { }
+  userFullImagePath: string;
+  private userImagePathSubscription: Subscription;
 
-  ngOnInit() {}
+  constructor(public popoverController: PopoverController, private authService: AuthService) { }
+
+  ngOnInit() {
+    // Getting User Image
+    this.userImagePathSubscription = this.authService.userFullImagePath.subscribe((fullImagePath: string) => {
+      this.userFullImagePath = fullImagePath;
+    })
+  }
 
   // Popover onClick
   async presentPopover(ev: any) {
@@ -25,6 +35,10 @@ export class HeaderComponent implements OnInit {
 
     const { role } = await popover.onDidDismiss();
     console.log('onDidDismiss resolved with role', role);
+  }
+
+  ngOnDestroy() {
+    this.userImagePathSubscription.unsubscribe();
   }
 
 }

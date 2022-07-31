@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, take, tap } from 'rxjs/operators';
+import { AuthService } from 'src/app/auth/services/auth.service';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/Post';
 
@@ -9,7 +10,15 @@ import { Post } from '../models/Post';
 })
 export class PostService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) {
+    this.authService.getUserImageName().pipe(
+      take(1),
+      tap(({imageName}) => {
+        const defaultImagePath = 'blank-profile-picture.png';
+        this.authService.updateUserImagePath(imageName || defaultImagePath).subscribe();
+      })
+    ).subscribe();
+  }
 
   // Http Header
   private httpOptions: { headers: HttpHeaders } = {

@@ -19,7 +19,7 @@
     <ion-row class="ion-justify-content-start">
       <ion-col size="auto">
         <ion-avatar>
-          <ion-img src="../../../../../assets/thutasann.webp"></ion-img>
+          <ion-img *ngIf="userFullImagePath" [src]="userFullImagePath"></ion-img>
         </ion-avatar>
       </ion-col>
       <ion-col>
